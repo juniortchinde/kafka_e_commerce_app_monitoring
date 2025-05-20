@@ -1,0 +1,48 @@
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+:root {
+    --blue: #5179FF;
+    --blue2: #030c2a;
+    --white:#FFFFFF;
+    --red: #FF0000;
+    --border: #CCC;
+    --icons:#949292;
+    --background: #FAFAFB;
+
+}
+
+html, body {
+    height: 100%;
+}
+
+
+body {
+    font-family: "Roboto Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    display: grid;
+    grid-template-rows: auto 1fr auto; /* En-tête, contenu flexible, pied de page */
+    min-height: 100vh;
+}
+
+a {
+    text-decoration: none; /* Supprime le soulignement */
+    color: inherit;        /* Utilise la couleur de texte héritée du parent */
+    font-weight: normal;   /* Réinitialise le style de la police */
+}
+
+a:visited, a:hover, a:focus, a:active {
+    text-decoration: none; /* Supprime le soulignement dans tous les états */
+    color: inherit;        /* Conserve la couleur héritée dans tous les états */
+}
+
+
+ul, li {
+    list-style: none; /* Appliqué uniquement aux sous-listes */
+}
+li::marker {
+    display: none;
+}

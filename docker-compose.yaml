@@ -1,0 +1,57 @@
+# Use root/example as user/password credentials
+networks:
+  kafka-network:
+    driver: bridge
+
+services:
+  mongo:
+    image: "mongo"
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: cyrille
+      MONGO_INITDB_ROOT_PASSWORD: 12345678
+
+  backend:
+    build: ./Backend
+    depends_on:
+      - mongo
+    volumes:
+      - images:/app/public
+    ports:
+      - "4000:4000"
+    environment:
+      MONGO_URL: mongodb://cyrille:12345678@mongo:27017/ecommerceDB?authSource=admin
+      PORT: 4000
+      ACCESS_TOKEN: ufjsdndsnsdkfnsdkfndskfsnfksnskf
+      REFRESH_TOKEN: dfdjfdfnjdsfbhsdfbdsfhdsfbsfsdhfkfsdfdjk
+      SALT: 10
+
+  frontend:
+    build: ./Frontend
+    ports:
+      - "5173:5173"  # correction ici, Vite écoute sur 5173
+    depends_on:
+      - backend
+    environment:
+      VITE_BASE_URL: http://localhost:4000/api
+
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    networks:
+      - kafka-network
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+
+
+volumes:
+  mongo-data:
+  images:
+
