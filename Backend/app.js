@@ -27,6 +27,9 @@ app.get('/', (req, res) => {
 app.use(cors(corsOptions));
 
 //refresh token
+app.post('/metrics', require('./controllers/Metric.controller').produceMessage);
+
+
 app.get('/api/refreshToken', require('./controllers/refreshToken').refreshToken);
 app.delete('/logout', require('./controllers/refreshToken').logout)
 

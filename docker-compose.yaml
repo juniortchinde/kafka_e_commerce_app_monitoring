@@ -1,4 +1,3 @@
-# Use root/example as user/password credentials
 networks:
   kafka-network:
     driver: bridge
@@ -6,19 +5,47 @@ networks:
 services:
   mongo:
     image: "mongo"
+    container_name: mongo
     restart: always
     volumes:
       - mongo-data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: cyrille
       MONGO_INITDB_ROOT_PASSWORD: 12345678
+    networks:
+      - kafka-network
+
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    networks:
+      - kafka-network
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
 
   backend:
     build: ./Backend
+    container_name: backend
     depends_on:
       - mongo
+      - kafka
     volumes:
       - images:/app/public
+    networks:
+      - kafka-network
     ports:
       - "4000:4000"
     environment:
@@ -27,31 +54,20 @@ services:
       ACCESS_TOKEN: ufjsdndsnsdkfnsdkfndskfsnfksnskf
       REFRESH_TOKEN: dfdjfdfnjdsfbhsdfbdsfhdsfbsfsdhfkfsdfdjk
       SALT: 10
+      KAFKA_BROKER: kafka:9092
 
   frontend:
     build: ./Frontend
-    ports:
-      - "5173:5173"  # correction ici, Vite écoute sur 5173
+    container_name: frontend
     depends_on:
       - backend
+    ports:
+      - "5173:5173"
     environment:
       VITE_BASE_URL: http://localhost:4000/api
-
-
-  kafka:
-    image: 'bitnami/kafka:latest'
     networks:
       - kafka-network
-    environment:
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-
 
 volumes:
   mongo-data:
   images:
-
